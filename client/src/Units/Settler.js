@@ -11,9 +11,10 @@ export default class Settler extends Unit {
       [
         {
           title: 'Settle city',
-          action: (cell) => {
-            const city = new City({ ...this.position })
+          action: (cell, neighbourCells) => {
+            const city = new City(cell, this.player)
             cell.setExtention(city)
+            neighbourCells.forEach(v => city.addTerritory(v))
             this.player.removeUnit(this)
           },
           isEnabled: (cell) => {

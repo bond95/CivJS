@@ -34,8 +34,7 @@ export default class Game {
     this.menu.y = 400
     for (let i = 0; i < CELLS_FOR_HEIGHT; i++) {
       for (let j = 0; j < CELLS_FOR_WIDTH; j++) {
-        const cell = new Cell(stage, GRASS_TEXTURE, () => this.unitStep(j, i))
-        cell.setPositionToRender({ x: j * 50, y: i * 50 })
+        const cell = new Cell(stage, GRASS_TEXTURE, { x: j, y: i }, () => this.unitStep(j, i))
         this.map.push(cell)
         this.stage.addChild(cell.getRenderObject())
       }
@@ -66,14 +65,26 @@ export default class Game {
     this.menu.addChild(buttonNextStep)
 
     this.prevActiveObject = this.activeObject
+    // Adding actions of active object
     if (this.activeObject !== null) {
       let numberOfButtons = 1
       const { x: objX, y: objY } = this.activeObject.getPosition()
       const cell = this.map[objY * CELLS_FOR_WIDTH + objX]
+
+      // Calculating of neighbour cells
+      const neighbourCells = this.map.filter((v, i) => {
+        const nX = i % CELLS_FOR_WIDTH
+        const nY = Math.floor(i / CELLS_FOR_WIDTH)
+        const absX = Math.abs(nX - objX)
+        const absY = Math.abs(nY - objY)
+        return (absX <= 1 && absY <= 1) && !(absX === 0 && absY === 0)
+      })
+
+      // Creating buttons for action
       for (let action of this.activeObject.getActions()) {
         if (action.isEnabled(cell)) {
           const button = createButton(action.title, () => {
-            action.action(cell)
+            action.action(cell, neighbourCells)
             this.activeObject = null
           })
           button.y = numberOfButtons * 50
