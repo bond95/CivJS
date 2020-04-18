@@ -45,34 +45,42 @@ export default class Game {
     this.player = new Player(stage, [settler])
     this.activeObject = null
     this.prevActiveObject = null
+    this.renderMenu()
 
     this.stage.addChild(this.menu)
   }
   nextStep = () => {
     this.player.nextStep()
+    this.renderMenu()
   }
   unitStep = (x, y) => {
     if (this.activeObject !== null) {
       this.activeObject.setDesctination({ x, y })
+      this.renderMenu()
     }
   }
   renderMenu = () => {
-    if (this.activeObject !== null && this.activeObject !== this.prevActiveObject) {
-      this.menu.removeAllChildren()
-      const { x: objX, y: objY } = this.activeObject.getPosition()
+    this.menu.removeAllChildren()
+
+    const buttonNextStep = createButton('Next step', this.nextStep)
+    this.menu.addChild(buttonNextStep)
+
+    this.prevActiveObject = this.activeObject
+    if (this.activeObject !== null) {
       let numberOfButtons = 1
+      const { x: objX, y: objY } = this.activeObject.getPosition()
       const cell = this.map[objY * CELLS_FOR_WIDTH + objX]
-      const buttonNextStep = createButton('Next step', this.nextStep)
-      this.menu.addChild(buttonNextStep)
       for (let action of this.activeObject.getActions()) {
         if (action.isEnabled(cell)) {
-          const button = createButton(action.title, () => action.action(cell))
+          const button = createButton(action.title, () => {
+            action.action(cell)
+            this.activeObject = null
+          })
           button.y = numberOfButtons * 50
           numberOfButtons++
           this.menu.addChild(button)
         }
       }
-      this.prevActiveObject = this.activeObject
     }
   }
   setActive = (activeObj) => {
@@ -80,7 +88,10 @@ export default class Game {
     this.activeObject = activeObj
   }
   render = () => {
-    this.renderMenu()
+    if (this.activeObject !== this.prevActiveObject) {
+      console.log('work')
+      this.renderMenu()
+    }
     this.stage.update()
   }
 }
