@@ -29,25 +29,47 @@ export default class Game {
   start = (stage) => {
     this.map = []
     this.stage = stage
-    this.menu = new Container();
+    this.menu = new Container()
     this.menu.x = 800
     this.menu.y = 400
+
+    this.initMap()
+
     for (let i = 0; i < CELLS_FOR_HEIGHT; i++) {
       for (let j = 0; j < CELLS_FOR_WIDTH; j++) {
-        const cell = new Cell(stage, GRASS_TEXTURE, { x: j, y: i }, () => this.unitStep(j, i))
+        const cell = new Cell(this.mapContainer, GRASS_TEXTURE, { x: j, y: i }, () => this.unitStep(j, i))
         this.map.push(cell)
-        this.stage.addChild(cell.getRenderObject())
+        this.mapContainer.addChild(cell.getRenderObject())
       }
     }
     const settler = new Settler({ x: 0, y: 0 }, this.setActive)
-    this.stage.addChild(settler.getRenderObject())
-    this.player = new Player(stage, [settler])
+    this.mapContainer.addChild(settler.getRenderObject())
+    this.player = new Player(this.mapContainer, [settler])
     this.activeObject = null
     this.prevActiveObject = null
     this.renderMenu()
 
+    this.stage.addChild(this.mapContainer)
     this.stage.addChild(this.menu)
   }
+
+  initMap = () => {
+    this.mapOffsetX = 0
+    this.mapOffsetY = 0
+    this.mapContainer = new Container()
+    // Save mouse start position
+    this.mapContainer.on('mousedown', (evt) => {
+      this.mapOffsetX = evt.stageX - this.mapContainer.x;
+      this.mapOffsetY = evt.stageY - this.mapContainer.y;
+    });
+
+    this.mapContainer.on('pressmove', (evt) => {
+      this.mapContainer.x = evt.stageX - this.mapOffsetX;
+      this.mapContainer.y = evt.stageY - this.mapOffsetY;
+    });
+
+  }
+
   nextStep = () => {
     this.player.nextStep()
     this.renderMenu()
@@ -100,7 +122,6 @@ export default class Game {
   }
   render = () => {
     if (this.activeObject !== this.prevActiveObject) {
-      console.log('work')
       this.renderMenu()
     }
     this.stage.update()
